@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JobPilot Login</title>
+<script>(function(){var t;try{t=localStorage.getItem("jobpilot-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+  .layout { min-height: 100vh; min-height: 100svh; display: grid; grid-template-columns: 1.1fr 1fr; }
+
+  /* Left: brand panel with floating 3D cards */
+  .side { position: relative; overflow: hidden; padding: 32px 48px; display: flex; flex-direction: column;
+          background: var(--grad-soft); border-right: 1px solid var(--border); }
+  /* Cards float in the upper part of the panel; the headline sits at the bottom so they never overlap. */
+  .side h2 { font-size: clamp(28px, 3.2vw, 42px); line-height: 1.15; letter-spacing: -1px; margin: auto 0 12px; max-width: 460px; position: relative; z-index: 2; }
+  .side p { color: var(--muted); max-width: 420px; margin: 0 0 24px; position: relative; z-index: 2; }
+  .stack { position: absolute; right: 6%; top: 90px; width: 380px; height: 420px; perspective: 1200px; pointer-events: none; }
+  @media (max-height: 760px) { .stack { display: none; } }
+  .fc { position: absolute; width: 270px; padding: 16px 18px; transform-style: preserve-3d; animation: drift 7s ease-in-out infinite; }
+  .fc b { display: block; font-size: 15px; }
+  .fc small { color: var(--muted); }
+  .fc .score { float: right; font-weight: 800; font-size: 18px; }
+  .fc:nth-child(1) { top: 10px; left: 60px; transform: rotateY(-22deg) rotateX(10deg) translateZ(40px); }
+  .fc:nth-child(2) { top: 150px; left: 0; transform: rotateY(-22deg) rotateX(10deg) translateZ(110px); animation-delay: -2s; }
+  .fc:nth-child(3) { top: 290px; left: 80px; transform: rotateY(-22deg) rotateX(10deg) translateZ(10px); animation-delay: -4s; }
+  @keyframes drift { 50% { translate: 0 -14px; } }
+
+  /* Right: form */
+  .main { display: flex; flex-direction: column; padding: 20px 24px 40px; }
+  .top { display: flex; align-items: center; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+  .top .brand { margin-right: auto; display: none; }
+  .form-wrap { width: 100%; max-width: 420px; margin: auto; padding-top: 24px; }
+  .form-wrap h1 { font-size: 30px; letter-spacing: -.6px; margin: 0 0 6px; }
+  .form-wrap > p { color: var(--muted); margin: 0 0 22px; }
+  .tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 4px; margin-bottom: 22px; }
+  .tabs button { border: 0; background: transparent; padding: 10px; border-radius: 10px; font-weight: 700; cursor: pointer; color: var(--muted); }
+  .tabs button.on { background: var(--surface-solid); color: var(--text); box-shadow: var(--shadow); }
+  .pw { position: relative; }
+  .pw .input { padding-right: 48px; }
+  .pw button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; cursor: pointer; font-size: 18px; padding: 6px; }
+  .hint { font-size: 13px; color: var(--muted); }
+  .error { background: var(--red-soft); color: var(--red); border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; margin: 20px 0; }
+  .divider::before, .divider::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+  .google { width: 100%; background: #fff; color: #1f1f1f; border: 1px solid #dadce0; font-weight: 600; }
+  .google:hover { border-color: #b8bcc4; background: #f8f9fb; }
+  .google svg { width: 20px; height: 20px; }
+  .note { font-size: 13px; color: var(--muted); text-align: center; margin-top: 10px; }
+  .switch { text-align: center; margin-top: 22px; color: var(--muted); font-size: 15px; }
+  .switch button { border: 0; background: none; color: var(--primary); font-weight: 700; cursor: pointer; padding: 0; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { display: none; }
+    .top .brand { display: inline-flex; }
+  }
+  @media (max-width: 480px) {
+    .main { padding: 16px 16px 32px; }
+    .form-wrap h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+<div class="layout">
+  <aside class="side">
+    <a class="brand" href="/"><span class="logo">✈</span>JobPilot</a>
+    <h2 data-th="sideTitle"></h2>
+    <p data-t="sideText"></p>
+    <div class="stack" aria-hidden="true">
+      <div class="card fc"><span class="score" style="color:var(--green)">92%</span><b>React Developer</b><small>Remote · Worldwide</small></div>
+      <div class="card fc"><span class="score" style="color:var(--green)">90%</span><b>DevOps Engineer</b><small>Remote · Europe</small></div>
+      <div class="card fc"><span class="score" style="color:var(--blue)">84%</span><b>Node.js Developer</b><small>Remote · APAC</small></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top">
+      <a class="brand" href="/"><span class="logo">✈</span>JobPilot</a>
+      <div class="seg" role="group" aria-label="Language">
+        <button data-lang="en">English</button><button data-lang="hi">हिंदी</button><button data-lang="hinglish">Hinglish</button>
+      </div>
+      <button class="icon-btn" data-theme-toggle data-ta="toggleTheme"></button>
+    </div>
+
+    <div class="form-wrap">
+      <h1 id="heading"></h1>
+      <p id="subheading"></p>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" data-mode="signup" data-t="tabSignup"></button>
+        <button role="tab" data-mode="login" data-t="tabLogin"></button>
+      </div>
+
+      <div class="error" id="error" role="alert" hidden></div>
+
+      <form id="form" novalidate>
+        <div class="field" id="nameField">
+          <label for="name" data-t="name"></label>
+          <input class="input" id="name" name="name" autocomplete="name" data-tp="namePh">
+        </div>
+        <div class="field">
+          <label for="email" data-t="email"></label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" data-tp="emailPh" required>
+        </div>
+        <div class="field">
+          <label for="password" data-t="password"></label>
+          <div class="pw">
+            <input class="input" id="password" name="password" type="password" data-tp="passwordPh" required>
+            <button type="button" id="togglePw" data-ta="showPassword">👁️</button>
+          </div>
+          <span class="hint" id="pwHint" data-t="pwHint"></span>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" id="submit" type="submit"></button>
+      </form>
+
+      <div class="divider"><span data-t="or"></span></div>
+
+      <a class="btn btn-lg google" href="/auth/google" id="googleBtn">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+        <span data-t="google"></span>
+      </a>
+      <p class="note" id="googleNote" hidden data-t="googleOff"></p>
+
+      <p class="switch"><span id="switchText"></span> <button type="button" id="switchBtn"></button></p>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/common.js"></script>
+<script>
+const T = {
+  en: {
+    toggleTheme: "Switch theme", showPassword: "Show password",
+    sideTitle: 'Your <span class="grad-text">AI job co-pilot</span> is one step away.',
+    sideText: "Upload your resume and get jobs ranked by how well they match your skills.",
+    signupTitle: "Create your account", signupSub: "It's free and takes 30 seconds.",
+    loginTitle: "Welcome back 👋", loginSub: "Log in to see your jobs and applications.",
+    tabSignup: "Sign up", tabLogin: "Log in",
+    name: "Full name", namePh: "e.g. Priya Sharma", email: "Email", emailPh: "you@example.com",
+    password: "Password", passwordPh: "At least 8 characters", pwHint: "Use at least 8 characters.",
+    signupBtn: "Create account", loginBtn: "Log in", working: "Please wait...",
+    or: "or", google: "Continue with Google",
+    googleOff: "Google sign-in isn't set up on this server yet. Please use email for now.",
+    haveAccount: "Already have an account?", noAccount: "New to JobPilot?",
+    err_name_required: "Please enter your name.", err_invalid_email: "Please enter a valid email address.",
+    err_weak_password: "Password must be at least 8 characters.", err_email_taken: "An account with this email already exists. Please log in.",
+    err_invalid_credentials: "Wrong email or password.", err_use_google: "This account uses Google. Please continue with Google.",
+    err_too_many_attempts: "Too many attempts. Please wait a few minutes and try again.",
+    err_google_failed: "Google sign-in didn't work. Please try again.",
+    err_google_not_configured: "Google sign-in isn't set up on this server yet. Please use email for now.",
+    error: "Something went wrong. Please try again.",
+  },
+  hi: {
+    toggleTheme: "थीम बदलें", showPassword: "पासवर्ड दिखाएँ",
+    sideTitle: 'आपका <span class="grad-text">AI जॉब साथी</span> बस एक कदम दूर है।',
+    sideText: "अपना रिज़्यूमे अपलोड करें और अपनी स्किल्स के हिसाब से रैंक की हुई नौकरियाँ पाएँ।",
+    signupTitle: "अपना अकाउंट बनाएँ", signupSub: "यह मुफ़्त है और सिर्फ़ 30 सेकंड लगते हैं।",
+    loginTitle: "फिर से स्वागत है 👋", loginSub: "अपनी नौकरियाँ और आवेदन देखने के लिए लॉग इन करें।",
+    tabSignup: "साइन अप", tabLogin: "लॉग इन",
+    name: "पूरा नाम", namePh: "जैसे: प्रिया शर्मा", email: "ईमेल", emailPh: "you@example.com",
+    password: "पासवर्ड", passwordPh: "कम से कम 8 अक्षर", pwHint: "कम से कम 8 अक्षर रखें।",
+    signupBtn: "अकाउंट बनाएँ", loginBtn: "लॉग इन करें", working: "कृपया रुकें...",
+    or: "या", google: "Google के साथ जारी रखें",
+    googleOff: "इस सर्वर पर अभी Google लॉग इन सेट नहीं है। अभी ईमेल से जारी रखें।",
+    haveAccount: "पहले से अकाउंट है?", noAccount: "JobPilot पर नए हैं?",
+    err_name_required: "कृपया अपना नाम लिखें।", err_invalid_email: "कृपया सही ईमेल लिखें।",
+    err_weak_password: "पासवर्ड कम से कम 8 अक्षर का होना चाहिए।", err_email_taken: "इस ईमेल से अकाउंट पहले से है। कृपया लॉग इन करें।",
+    err_invalid_credentials: "ईमेल या पासवर्ड गलत है।", err_use_google: "यह अकाउंट Google से बना है। कृपया Google से जारी रखें।",
+    err_too_many_attempts: "बहुत ज़्यादा कोशिशें हो गईं। कुछ मिनट बाद फिर कोशिश करें।",
+    err_google_failed: "Google लॉग इन नहीं हो पाया। कृपया फिर कोशिश करें।",
+    err_google_not_configured: "इस सर्वर पर अभी Google लॉग इन सेट नहीं है। अभी ईमेल से जारी रखें।",
+    error: "कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
+  },
+  hinglish: {
+    toggleTheme: "Theme badlo", showPassword: "Password dikhao",
+    sideTitle: 'Aapka <span class="grad-text">AI job co-pilot</span> bas ek step door hai.',
+    sideText: "Apna resume upload karo aur apni skills ke hisaab se ranked jobs pao.",
+    signupTitle: "Apna account banao", signupSub: "Ye free hai aur sirf 30 second lagte hain.",
+    loginTitle: "Welcome back 👋", loginSub: "Apni jobs aur applications dekhne ke liye log in karo.",
+    tabSignup: "Sign up", tabLogin: "Log in",
+    name: "Pura naam", namePh: "Jaise: Priya Sharma", email: "Email", emailPh: "you@example.com",
+    password: "Password", passwordPh: "Kam se kam 8 characters", pwHint: "Kam se kam 8 characters rakho.",
+    signupBtn: "Account banao", loginBtn: "Log in karo", working: "Ruko zara...",
+    or: "ya", google: "Google se continue karo",
+    googleOff: "Is server pe abhi Google login set nahi hai. Abhi email se continue karo.",
+    haveAccount: "Pehle se account hai?", noAccount: "JobPilot pe naye ho?",
+    err_name_required: "Apna naam likho.", err_invalid_email: "Sahi email likho.",
+    err_weak_password: "Password kam se kam 8 characters ka hona chahiye.", err_email_taken: "Is email se account pehle se hai. Log in karo.",
+    err_invalid_credentials: "Email ya password galat hai.", err_use_google: "Ye account Google se bana hai. Google se continue karo.",
+    err_too_many_attempts: "Bahut zyada attempts ho gaye. Kuch minute baad try karo.",
+    err_google_failed: "Google login nahi hua. Dobara try karo.",
+    err_google_not_configured: "Is server pe abhi Google login set nahi hai. Abhi email se continue karo.",
+    error: "Kuch gadbad hui. Dobara try karo.",
+  },
+};
+
+let mode = location.pathname === "/login" ? "login" : "signup";
+let lastError = new URLSearchParams(location.search).get("error"); // e.g. from a failed Google sign-in
+const $ = (s) => document.querySelector(s);
+
+function render() {
+  const signup = mode === "signup";
+  $("#heading").textContent = JP.t(signup ? "signupTitle" : "loginTitle");
+  $("#subheading").textContent = JP.t(signup ? "signupSub" : "loginSub");
+  $("#nameField").hidden = !signup;
+  $("#pwHint").hidden = !signup;
+  $("#password").autocomplete = signup ? "new-password" : "current-password";
+  $("#submit").textContent = JP.t(signup ? "signupBtn" : "loginBtn");
+  $("#switchText").textContent = JP.t(signup ? "haveAccount" : "noAccount");
+  $("#switchBtn").textContent = JP.t(signup ? "tabLogin" : "tabSignup");
+  document.querySelectorAll("[data-mode]").forEach((b) => {
+    b.classList.toggle("on", b.dataset.mode === mode);
+    b.setAttribute("aria-selected", b.dataset.mode === mode);
+  });
+  document.title = `JobPilot ${JP.t(signup ? "tabSignup" : "tabLogin")}`;
+  showError(lastError);
+}
+
+function showError(code) {
+  lastError = code;
+  const el = $("#error");
+  el.hidden = !code;
+  if (code) el.textContent = JP.t("err_" + code) !== "err_" + code ? JP.t("err_" + code) : JP.t("error");
+}
+
+function setMode(next) {
+  mode = next;
+  lastError = null;
+  history.replaceState(null, "", "/" + mode);
+  render();
+  (mode === "signup" ? $("#name") : $("#email")).focus();
+}
+
+document.querySelectorAll("[data-mode]").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.mode)));
+$("#switchBtn").addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
+$("#togglePw").addEventListener("click", () => {
+  const pw = $("#password");
+  pw.type = pw.type === "password" ? "text" : "password";
+  $("#togglePw").textContent = pw.type === "password" ? "👁️" : "🙈";
+});
+
+$("#form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = { email: $("#email").value.trim(), password: $("#password").value };
+  if (mode === "signup") body.name = $("#name").value.trim();
+
+  // Quick checks before calling the server
+  if (mode === "signup" && !body.name) return showError("name_required");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) return showError("invalid_email");
+  if (mode === "signup" && body.password.length < 8) return showError("weak_password");
+
+  const btn = $("#submit");
+  btn.disabled = true;
+  btn.textContent = JP.t("working");
+  try {
+    await JP.api(`/api/auth/${mode}`, { method: "POST", body: JSON.stringify(body) });
+    location.href = "/app";
+  } catch (err) {
+    showError(err.code || "error");
+    btn.disabled = false;
+    render();
+  }
+});
+
+JP.initI18n(T, render);
+render();
+
+// Show a note under the Google button when the server has no Google credentials.
+JP.api("/api/auth/config").then(({ google }) => {
+  if (!google) $("#googleNote").hidden = false;
+}).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JobPilot</title>
+<script>(function(){var t;try{t=localStorage.getItem("jobpilot-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+  .wrap { max-width: 900px; }
+
+  /* Header */
+  header { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+           background: color-mix(in srgb, var(--bg) 72%, transparent); border-bottom: 1px solid var(--border); }
+  .bar { display: flex; align-items: center; gap: 10px; padding: 10px 16px; flex-wrap: wrap; max-width: 1120px; margin: 0 auto; }
+  .bar .spacer { flex: 1; }
+  .user { position: relative; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; border: 2px solid transparent; background: var(--grad) border-box; cursor: pointer;
+            display: grid; place-items: center; color: #fff; font-weight: 800; overflow: hidden; padding: 0; }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .menu { position: absolute; right: 0; top: calc(100% + 8px); width: 250px; padding: 14px; z-index: 30; }
+  .menu b { display: block; overflow-wrap: anywhere; }
+  .menu small { color: var(--muted); display: block; overflow-wrap: anywhere; margin-bottom: 12px; }
+
+  /* Greeting + tabs */
+  .hello { margin: 26px 0 4px; font-size: clamp(22px, 4vw, 30px); letter-spacing: -.5px; }
+  .tabs { display: flex; gap: 8px; margin: 14px 0 18px; }
+  .tab { border: 1px solid var(--border-strong); background: var(--surface-2); padding: 9px 18px; border-radius: 999px; cursor: pointer; font-weight: 700; color: var(--muted); }
+  .tab.on { background: var(--grad); border-color: transparent; color: #fff; box-shadow: var(--glow); }
+  .count { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: rgba(255,255,255,.22); font-size: 13px; }
+  .tab:not(.on) .count { background: var(--grad-soft); color: var(--primary); }
+
+  /* Steps */
+  .card { margin-bottom: 16px; }
+  .step { display: flex; align-items: center; gap: 12px; margin: 0 0 6px; font-size: 19px; }
+  .num { width: 32px; height: 32px; flex: none; border-radius: 10px; background: var(--grad); color: #fff; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
+  .help { color: var(--muted); margin: 0 0 14px; font-size: 15px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 12px; }
+  .grow { flex: 1 1 220px; }
+  textarea.input { min-height: 130px; resize: vertical; margin-top: 4px; }
+
+  .drop { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; cursor: pointer;
+          border: 2px dashed var(--border-strong); border-radius: 16px; padding: 30px 16px; background: var(--surface-2); transition: .2s; }
+  .drop:hover, .drop.over { border-color: var(--primary); background: var(--grad-soft); transform: translateY(-2px); }
+  .drop .icon { font-size: 38px; line-height: 1; margin-bottom: 6px; }
+  .drop b { font-size: 17px; }
+  .drop.busy { pointer-events: none; opacity: .8; }
+  .or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 14px; margin: 16px 0 10px; }
+  .or::before, .or::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+  details summary { cursor: pointer; color: var(--primary); font-weight: 700; }
+  details[open] summary { margin-bottom: 10px; }
+  .saved-line { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .ok { color: var(--green); font-weight: 700; }
+  .sk { border-radius: 8px; padding: 2px 10px; font-size: 13px; font-weight: 600; }
+  .sk.top { background: var(--grad); color: #fff; }
+  .sk.plain { background: var(--surface-2); border: 1px solid var(--border); }
+  .sk.have { background: var(--green-soft); color: var(--green); }
+  .sk.need { background: var(--amber-soft); color: var(--amber); }
+
+  /* Results */
+  .summary { display: flex; justify-content: space-between; align-items: flex-end; gap: 10px; flex-wrap: wrap; margin: 28px 0 14px; }
+  .summary h2 { margin: 0; font-size: 20px; }
+  .notice { background: var(--amber-soft); color: var(--amber); border-radius: 12px; padding: 11px 15px; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+  .job { display: flex; gap: 18px; transition: transform .2s, box-shadow .2s; }
+  .job:hover { transform: translateY(-2px); box-shadow: var(--glow); }
+  .ring { --c: var(--muted); --s: var(--surface-2); width: 78px; height: 78px; flex: none; border-radius: 50%; display: grid; place-items: center;
+          background: conic-gradient(var(--c) calc(var(--p) * 1%), var(--s) 0); }
+  .ring > div { width: 62px; height: 62px; border-radius: 50%; background: var(--surface-solid); display: grid; place-items: center; font-weight: 800; font-size: 18px; color: var(--c); }
+  .lvl-strong { --c: var(--green); --s: var(--green-soft); }
+  .lvl-good { --c: var(--blue); --s: var(--blue-soft); }
+  .lvl-partial { --c: var(--amber); --s: var(--amber-soft); }
+  .lvl-weak { --c: var(--red); --s: var(--red-soft); }
+  .badge { display: inline-block; border-radius: 999px; padding: 2px 11px; font-size: 13px; font-weight: 700; color: var(--c); background: var(--s); margin-bottom: 4px; }
+  .job-main { flex: 1; min-width: 0; }
+  .job h3 { margin: 0; font-size: 17.5px; line-height: 1.35; overflow-wrap: anywhere; }
+  .meta { color: var(--muted); font-size: 14px; margin: 2px 0 10px; overflow-wrap: anywhere; }
+  .facts { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+  .skills { display: grid; gap: 7px; margin-bottom: 14px; }
+  .skills .label { font-size: 13px; font-weight: 700; margin-right: 2px; }
+  .desc { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--border-strong); font-size: 14px; color: var(--muted); white-space: pre-line; max-height: 340px; overflow: auto; }
+  .center { text-align: center; padding: 40px 16px; color: var(--muted); }
+
+  /* Applications */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 16px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 8px; text-align: center; }
+  .stat b { display: block; font-size: 24px; font-weight: 800; }
+  .stat span { color: var(--muted); font-size: 13px; }
+  .app { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .app .job-main { flex: 1 1 240px; }
+  select.input { width: auto; padding: 8px 12px; cursor: pointer; }
+  select.input option { background: var(--surface-solid); color: var(--text); }
+
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px 44px; }
+
+  @media (max-width: 720px) {
+    .nav-lang { order: 3; width: 100%; display: flex; justify-content: center; }
+  }
+  @media (max-width: 560px) {
+    .stats { grid-template-columns: repeat(3, 1fr); }
+    .job { flex-direction: column; gap: 12px; }
+    .ring { width: 66px; height: 66px; }
+    .ring > div { width: 52px; height: 52px; font-size: 16px; }
+    .tabs { display: grid; grid-template-columns: 1fr 1fr; }
+    .tab { padding: 10px 8px; font-size: 14.5px; white-space: nowrap; }
+    .count { margin-left: 4px; }
+    .job .row .btn { flex: 1 1 auto; }
+    .app select.input { flex: 1; }
+  }
+  @media (max-width: 380px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<header>
+  <div class="bar">
+    <a class="brand" href="/"><span class="logo">✈</span>JobPilot</a>
+    <span class="spacer"></span>
+    <div class="nav-lang">
+      <div class="seg" role="group" aria-label="Language">
+        <button data-lang="en">English</button><button data-lang="hi">हिंदी</button><button data-lang="hinglish">Hinglish</button>
+      </div>
+    </div>
+    <button class="icon-btn" data-theme-toggle data-ta="toggleTheme"></button>
+    <div class="user">
+      <button class="avatar" id="avatar" aria-haspopup="true" aria-expanded="false" data-ta="account"></button>
+      <div class="card menu" id="menu" hidden>
+        <b id="userName"></b>
+        <small id="userEmail"></small>
+        <button class="btn btn-sm btn-block" id="logout">↪ <span data-t="logout"></span></button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="hello" id="hello"></h1>
+  <div class="tabs">
+    <button class="tab on" data-view="find" data-t="tabFind"></button>
+    <button class="tab" data-view="apps"><span data-t="tabApps"></span><span class="count" id="appCount">0</span></button>
+  </div>
+
+  <!-- FIND JOBS -->
+  <section id="view-find">
+    <div class="card">
+      <h2 class="step"><span class="num">1</span><span data-t="step1"></span></h2>
+      <div id="resumeEdit">
+        <p class="help" data-t="step1Help"></p>
+        <label class="drop" id="drop">
+          <input type="file" id="file" accept=".pdf,.docx,.txt,.md" hidden>
+          <span class="icon" id="dropIcon">📄</span>
+          <b id="dropTitle" data-t="uploadTitle"></b>
+          <span class="muted" style="font-size:14px" data-t="uploadHint"></span>
+        </label>
+        <div class="or"><span data-t="or"></span></div>
+        <details id="pasteBox">
+          <summary data-t="pasteInstead"></summary>
+          <textarea class="input" id="resume" data-tp="resumePh"></textarea>
+          <div class="row"><button class="btn btn-primary" id="saveResume" data-t="saveResume"></button></div>
+        </details>
+      </div>
+      <div id="resumeDone" hidden>
+        <div class="saved-line">
+          <span class="ok">✓ <span data-t="resumeSaved"></span></span>
+          <button class="btn btn-sm" id="editResume" data-t="changeResume"></button>
+        </div>
+        <p class="help" style="margin:14px 0 8px" id="skillsLabel"></p>
+        <div class="chips" id="skillChips"></div>
+        <button class="btn btn-primary btn-lg btn-block" style="margin-top:16px" id="forMe">✨ <span data-t="findForMe"></span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 class="step"><span class="num">2</span><span data-t="step2"></span></h2>
+      <form id="searchForm">
+        <div class="row" style="margin-top:8px">
+          <input type="text" class="input grow" id="query" data-tp="queryPh" required>
+          <input type="text" class="input grow" id="location" data-tp="locationPh">
+        </div>
+        <div class="row">
+          <label class="check"><input type="checkbox" id="remote"> <span data-t="remoteOnly"></span></label>
+          <label class="check" id="useResumeWrap" hidden><input type="checkbox" id="useResume"> <span data-t="useResume"></span></label>
+          <span style="flex:1"></span>
+          <button class="btn btn-primary" type="submit" id="searchBtn">🔍 <span data-t="search"></span></button>
+        </div>
+      </form>
+      <div class="row chips">
+        <span class="muted" style="font-size:14px" data-t="popular"></span>
+        <button class="chip" data-q="React">React</button>
+        <button class="chip" data-q="Python">Python</button>
+        <button class="chip" data-q="Node.js">Node.js</button>
+        <button class="chip" data-q="Java">Java</button>
+        <button class="chip" data-q="Data analyst">Data analyst</button>
+        <button class="chip" data-q="DevOps">DevOps</button>
+      </div>
+    </div>
+
+    <div id="results"></div>
+  </section>
+
+  <!-- MY APPLICATIONS -->
+  <section id="view-apps" hidden>
+    <div class="stats" id="stats"></div>
+    <div id="appList"></div>
+  </section>
+</main>
+
+<footer>
+  <span data-t="footer"></span>
+  <a href="https://remotive.com" target="_blank" rel="noopener">Remotive</a>,
+  <a href="https://jobicy.com" target="_blank" rel="noopener">Jobicy</a>,
+  <a href="https://www.arbeitnow.com" target="_blank" rel="noopener">Arbeitnow</a>
+</footer>
+
+<script src="/assets/common.js"></script>
+<script>
+const T = {
+  en: {
+    toggleTheme: "Switch theme", account: "Account", logout: "Log out", hello: "Hi {name} 👋",
+    tabFind: "Find Jobs", tabApps: "My Applications",
+    step1: "Add your resume",
+    step1Help: "Upload your resume. We'll read your skills and find jobs that match them. Only you can see it.",
+    uploadTitle: "Upload your resume", uploadHint: "Tap here or drag a file in · PDF, Word (.docx) or TXT · max 5 MB",
+    reading: "Reading your resume...", or: "or", pasteInstead: "Paste resume text instead",
+    resumePh: "e.g. Frontend Developer with 2 years of experience in React, JavaScript, Node.js, Git...",
+    saveResume: "Save resume", resumeSaved: "Resume saved", changeResume: "Change resume",
+    resumeShort: "Resume is too short. Please add at least 50 characters.",
+    skillsFound: "We found {n} skills in your resume (★ = used for searching):",
+    noSkills: "We couldn't find specific tech skills in your resume. You can still search below.",
+    findForMe: "Find jobs for my skills", forSkills: "Jobs for your skills: {s}",
+    step2: "Or search for a specific job",
+    queryPh: "e.g. React developer, Python, Data analyst", locationPh: "Location (optional), e.g. India, Europe",
+    remoteOnly: "Remote only", useResume: "Show match score with my resume", search: "Search", popular: "Popular:",
+    searching: "Searching 3 job websites...", found: "{n} jobs found", sorted: "Best match first",
+    noResume: "Tip: add your resume in step 1 to see how well each job fits you.",
+    matchHint: "Tick “Show match score with my resume” to see how well each job fits you.",
+    noResults: "No jobs found. Try a simpler word, or remove the location.",
+    strong: "Strong match", good: "Good match", partial: "Partial match", weak: "Weak match",
+    have: "You have:", need: "To learn:", nothingMissing: "Nothing missing 🎉",
+    apply: "Apply", save: "Save", saved: "Saved", details: "Details", hide: "Hide",
+    salaryNA: "Salary not disclosed", remote: "Remote", today: "Today", daysAgo: "{n} days ago",
+    total: "Total", applied: "Applied", interviews: "Interviews", offers: "Offers", rate: "Response rate",
+    st_saved: "Saved", st_applied: "Applied", st_interview: "Interview", st_offer: "Offer", st_rejected: "Rejected",
+    noApps: "No saved jobs yet. Find a job and press Save.", view: "View job", remove: "Remove", addedOn: "Saved on {d}",
+    tSaved: "Saved to My Applications", tDup: "Already in My Applications", tStatus: "Status updated", tRemoved: "Removed",
+    error: "Something went wrong. Please try again.",
+    err_too_large: "File is too big. Maximum size is 5 MB.",
+    err_unsupported: "This file type isn't supported. Please use PDF, Word (.docx) or TXT.",
+    err_empty: "No text found in this file. If it's a scanned PDF, paste the text instead.",
+    err_unreadable: "Couldn't read this file. Try another file, or paste the text instead.",
+    err_too_short: "Resume is too short. Please add at least 50 characters.",
+    err_no_skills: "No skills found in your resume. Please search below instead.",
+    err_no_resume: "Please upload your resume first.", err_job_not_found: "This job expired from the list. Please search again.",
+    footer: "Jobs are shown in their original language, from",
+  },
+  hi: {
+    toggleTheme: "थीम बदलें", account: "अकाउंट", logout: "लॉग आउट", hello: "नमस्ते {name} 👋",
+    tabFind: "नौकरी खोजें", tabApps: "मेरे आवेदन",
+    step1: "अपना रिज़्यूमे डालें",
+    step1Help: "अपना रिज़्यूमे अपलोड करें। हम आपकी स्किल्स पढ़कर उनसे मिलती नौकरियाँ खोजेंगे। इसे सिर्फ़ आप देख सकते हैं।",
+    uploadTitle: "अपना रिज़्यूमे अपलोड करें", uploadHint: "यहाँ टैप करें या फ़ाइल खींचकर लाएँ · PDF, Word (.docx) या TXT · ज़्यादा से ज़्यादा 5 MB",
+    reading: "आपका रिज़्यूमे पढ़ रहे हैं...", or: "या", pasteInstead: "रिज़्यूमे का टेक्स्ट पेस्ट करें",
+    resumePh: "जैसे: Frontend Developer, 2 साल का अनुभव: React, JavaScript, Node.js, Git...",
+    saveResume: "रिज़्यूमे सेव करें", resumeSaved: "रिज़्यूमे सेव हो गया", changeResume: "रिज़्यूमे बदलें",
+    resumeShort: "रिज़्यूमे बहुत छोटा है। कम से कम 50 अक्षर लिखें।",
+    skillsFound: "आपके रिज़्यूमे में {n} स्किल्स मिलीं (★ = इनसे खोज होगी):",
+    noSkills: "आपके रिज़्यूमे में कोई खास टेक स्किल नहीं मिली। आप नीचे खोज सकते हैं।",
+    findForMe: "मेरी स्किल्स के हिसाब से नौकरी खोजें", forSkills: "आपकी स्किल्स के लिए नौकरियाँ: {s}",
+    step2: "या कोई खास नौकरी खोजें",
+    queryPh: "जैसे: React developer, Python, Data analyst", locationPh: "जगह (ज़रूरी नहीं), जैसे India, Europe",
+    remoteOnly: "सिर्फ़ रिमोट", useResume: "मेरे रिज़्यूमे से मैच स्कोर दिखाएँ", search: "खोजें", popular: "लोकप्रिय:",
+    searching: "3 जॉब वेबसाइट्स पर खोज रहे हैं...", found: "{n} नौकरियाँ मिलीं", sorted: "सबसे अच्छा मैच सबसे पहले",
+    noResume: "सुझाव: स्टेप 1 में अपना रिज़्यूमे डालें, ताकि पता चले कि हर नौकरी आपके लिए कितनी सही है।",
+    matchHint: "हर नौकरी का मैच स्कोर देखने के लिए “मेरे रिज़्यूमे से मैच स्कोर दिखाएँ” पर टिक करें।",
+    noResults: "कोई नौकरी नहीं मिली। आसान शब्द आज़माएँ या जगह हटा दें।",
+    strong: "बहुत अच्छा मैच", good: "अच्छा मैच", partial: "थोड़ा मैच", weak: "कम मैच",
+    have: "आपके पास है:", need: "सीखना होगा:", nothingMissing: "कुछ भी कम नहीं 🎉",
+    apply: "आवेदन करें", save: "सेव करें", saved: "सेव किया", details: "विवरण", hide: "छुपाएँ",
+    salaryNA: "वेतन नहीं बताया", remote: "रिमोट", today: "आज", daysAgo: "{n} दिन पहले",
+    total: "कुल", applied: "आवेदन किए", interviews: "इंटरव्यू", offers: "ऑफ़र", rate: "जवाब दर",
+    st_saved: "सेव किया", st_applied: "आवेदन किया", st_interview: "इंटरव्यू", st_offer: "ऑफ़र मिला", st_rejected: "रिजेक्ट",
+    noApps: "अभी कोई नौकरी सेव नहीं है। नौकरी खोजें और 'सेव करें' दबाएँ।", view: "नौकरी देखें", remove: "हटाएँ", addedOn: "{d} को सेव किया",
+    tSaved: "मेरे आवेदन में सेव हो गया", tDup: "यह पहले से सेव है", tStatus: "स्थिति बदल गई", tRemoved: "हटा दिया",
+    error: "कुछ गड़बड़ हुई। कृपया फिर कोशिश करें।",
+    err_too_large: "फ़ाइल बहुत बड़ी है। ज़्यादा से ज़्यादा 5 MB की फ़ाइल डालें।",
+    err_unsupported: "यह फ़ाइल नहीं चलेगी। कृपया PDF, Word (.docx) या TXT फ़ाइल डालें।",
+    err_empty: "इस फ़ाइल में टेक्स्ट नहीं मिला। अगर यह स्कैन की हुई PDF है, तो टेक्स्ट पेस्ट करें।",
+    err_unreadable: "यह फ़ाइल पढ़ी नहीं जा सकी। दूसरी फ़ाइल आज़माएँ या टेक्स्ट पेस्ट करें।",
+    err_too_short: "रिज़्यूमे बहुत छोटा है। कम से कम 50 अक्षर लिखें।",
+    err_no_skills: "आपके रिज़्यूमे में कोई स्किल नहीं मिली। कृपया नीचे खोजें।",
+    err_no_resume: "पहले अपना रिज़्यूमे अपलोड करें।", err_job_not_found: "यह नौकरी सूची से हट गई है। कृपया फिर से खोजें।",
+    footer: "नौकरियाँ अपनी मूल भाषा में दिखती हैं, यहाँ से:",
+  },
+  hinglish: {
+    toggleTheme: "Theme badlo", account: "Account", logout: "Log out", hello: "Hi {name} 👋",
+    tabFind: "Job Dhoondo", tabApps: "Meri Applications",
+    step1: "Apna resume daalo",
+    step1Help: "Apna resume upload karo. Hum aapki skills padhke unse milti jobs dhoondhenge. Ise sirf aap dekh sakte ho.",
+    uploadTitle: "Apna resume upload karo", uploadHint: "Yahan tap karo ya file drag karke lao · PDF, Word (.docx) ya TXT · max 5 MB",
+    reading: "Aapka resume padh rahe hain...", or: "ya", pasteInstead: "Resume ka text paste karo",
+    resumePh: "Jaise: Frontend Developer, 2 saal ka experience: React, JavaScript, Node.js, Git...",
+    saveResume: "Resume save karo", resumeSaved: "Resume save ho gaya", changeResume: "Resume badlo",
+    resumeShort: "Resume bahut chhota hai. Kam se kam 50 characters likho.",
+    skillsFound: "Aapke resume me {n} skills mili (★ = inse search hoga):",
+    noSkills: "Aapke resume me koi specific tech skill nahi mili. Aap neeche search kar sakte ho.",
+    findForMe: "Meri skills ke hisaab se job dhoondo", forSkills: "Aapki skills ke liye jobs: {s}",
+    step2: "Ya koi specific job dhoondo",
+    queryPh: "Jaise: React developer, Python, Data analyst", locationPh: "Location (zaroori nahi), jaise India, Europe",
+    remoteOnly: "Sirf remote", useResume: "Mere resume se match score dikhao", search: "Dhoondo", popular: "Popular:",
+    searching: "3 job websites pe dhoondh rahe hain...", found: "{n} jobs mili", sorted: "Best match sabse pehle",
+    noResume: "Tip: step 1 me apna resume daalo, taaki pata chale ki har job aapke liye kitni sahi hai.",
+    matchHint: "Har job ka match score dekhne ke liye “Mere resume se match score dikhao” pe tick karo.",
+    noResults: "Koi job nahi mili. Simple word try karo ya location hata do.",
+    strong: "Zabardast match", good: "Achha match", partial: "Thoda match", weak: "Kam match",
+    have: "Aapke paas hai:", need: "Seekhna padega:", nothingMissing: "Kuch bhi missing nahi 🎉",
+    apply: "Apply karo", save: "Save karo", saved: "Saved", details: "Details", hide: "Chhupao",
+    salaryNA: "Salary nahi batayi", remote: "Remote", today: "Aaj", daysAgo: "{n} din pehle",
+    total: "Total", applied: "Apply kiye", interviews: "Interviews", offers: "Offers", rate: "Response rate",
+    st_saved: "Saved", st_applied: "Apply kiya", st_interview: "Interview", st_offer: "Offer mila", st_rejected: "Reject hua",
+    noApps: "Abhi koi job save nahi hai. Job dhoondo aur 'Save karo' dabao.", view: "Job dekho", remove: "Hatao", addedOn: "{d} ko save kiya",
+    tSaved: "Meri Applications me save ho gaya", tDup: "Ye pehle se saved hai", tStatus: "Status badal gaya", tRemoved: "Hata diya",
+    error: "Kuch gadbad hui. Dobara try karo.",
+    err_too_large: "File bahut badi hai. Max 5 MB ki file daalo.",
+    err_unsupported: "Ye file type nahi chalega. PDF, Word (.docx) ya TXT file daalo.",
+    err_empty: "Is file me text nahi mila. Agar ye scanned PDF hai, toh text paste karo.",
+    err_unreadable: "Ye file padh nahi paaye. Doosri file try karo ya text paste karo.",
+    err_too_short: "Resume bahut chhota hai. Kam se kam 50 characters likho.",
+    err_no_skills: "Aapke resume me koi skill nahi mili. Neeche search karo.",
+    err_no_resume: "Pehle apna resume upload karo.", err_job_not_found: "Ye job list se hat gayi. Dobara search karo.",
+    footer: "Jobs apni original language me dikhti hain, yahan se:",
+  },
+};
+const STATUSES = ["saved", "applied", "interview", "offer", "rejected"];
+
+const $ = (s) => document.querySelector(s);
+const t = (k, v) => JP.t(k, v);
+const esc = JP.esc;
+const safeUrl = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
+const level = (s) => (s >= 75 ? "strong" : s >= 50 ? "good" : s >= 25 ? "partial" : "weak");
+
+let me = null;          // signed-in user
+let resumeInfo = null;  // { resume, skills, topSkills } once a resume is saved
+let lastResults = null; // last results response, re-rendered on language change
+let apps = { applications: [], stats: null };
+const openDetails = new Map(); // job id -> description text
+
+// Any 401 means the session ended: go back to login.
+async function api(path, opts) {
+  try {
+    return await JP.api(path, opts);
+  } catch (err) {
+    if (err.status === 401) location.href = "/login";
+    throw err;
+  }
+}
+const errMsg = (err) => JP.errMsg(err);
+
+function rerender() {
+  renderUser();
+  renderSkills();
+  if (lastResults) renderResults(lastResults);
+  renderApps();
+}
+
+// ---------- User menu ----------
+function renderUser() {
+  if (!me) return;
+  const first = me.name.split(" ")[0] || me.name;
+  $("#hello").textContent = t("hello", { name: first });
+  $("#userName").textContent = me.name;
+  $("#userEmail").textContent = me.email;
+  const avatar = $("#avatar");
+  if (me.picture) {
+    avatar.innerHTML = `<img src="${esc(me.picture)}" alt="" referrerpolicy="no-referrer">`;
+  } else {
+    avatar.textContent = first.charAt(0).toUpperCase();
+  }
+}
+$("#avatar").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const menu = $("#menu");
+  menu.hidden = !menu.hidden;
+  $("#avatar").setAttribute("aria-expanded", String(!menu.hidden));
+});
+document.addEventListener("click", (e) => { if (!e.target.closest(".user")) $("#menu").hidden = true; });
+$("#logout").addEventListener("click", async () => {
+  try { await JP.api("/api/auth/logout", { method: "POST" }); } catch {}
+  location.href = "/";
+});
+
+// ---------- Tabs ----------
+document.querySelectorAll(".tab").forEach((tab) =>
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === tab));
+    $("#view-find").hidden = tab.dataset.view !== "find";
+    $("#view-apps").hidden = tab.dataset.view !== "apps";
+    if (tab.dataset.view === "apps") loadApps();
+  }),
+);
+
+// ---------- Resume ----------
+function showResumeSaved(saved) {
+  $("#resumeEdit").hidden = saved;
+  $("#resumeDone").hidden = !saved;
+  $("#useResumeWrap").hidden = !resumeInfo;
+  renderSkills();
+}
+
+function renderSkills() {
+  if (!resumeInfo) return;
+  const top = new Set(resumeInfo.topSkills);
+  // Top skills (the ones used for searching) first and highlighted.
+  const ordered = [...resumeInfo.topSkills, ...resumeInfo.skills.filter((s) => !top.has(s))];
+  $("#skillsLabel").textContent = ordered.length ? t("skillsFound", { n: ordered.length }) : t("noSkills");
+  $("#skillChips").innerHTML = ordered
+    .map((s) => `<span class="sk ${top.has(s) ? "top" : "plain"}">${top.has(s) ? "★ " : ""}${esc(s)}</span>`)
+    .join("");
+  $("#forMe").hidden = resumeInfo.topSkills.length === 0;
+}
+
+// Called after any successful upload or paste.
+function resumeSaved(info) {
+  resumeInfo = info;
+  $("#resume").value = info.resume;
+  showResumeSaved(true);
+  JP.toast(t("resumeSaved") + " ✓");
+  if (info.topSkills.length) runForMe();
+}
+
+$("#saveResume").addEventListener("click", async () => {
+  const text = $("#resume").value.trim();
+  if (text.length < 50) return JP.toast(t("resumeShort"));
+  try {
+    resumeSaved(await api("/api/resume", { method: "POST", body: JSON.stringify({ resume_text: text }) }));
+  } catch (err) { JP.toast(errMsg(err)); }
+});
+$("#editResume").addEventListener("click", () => showResumeSaved(false));
+
+// ---------- Upload ----------
+const drop = $("#drop");
+function setUploading(busy) {
+  drop.classList.toggle("busy", busy);
+  $("#dropIcon").textContent = busy ? "⏳" : "📄";
+  $("#dropTitle").textContent = t(busy ? "reading" : "uploadTitle");
+}
+
+async function uploadFile(file) {
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) return JP.toast(t("err_too_large"));
+  setUploading(true);
+  try {
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/octet-stream", "X-Filename": encodeURIComponent(file.name) },
+      body: file,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401) location.href = "/login";
+    if (!res.ok) throw Object.assign(new Error(data.error || res.statusText), { code: data.code });
+    resumeSaved(data);
+  } catch (err) {
+    JP.toast(errMsg(err));
+  } finally {
+    setUploading(false);
+    $("#file").value = ""; // allow re-uploading the same file
+  }
+}
+
+$("#file").addEventListener("change", (e) => uploadFile(e.target.files[0]));
+["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => uploadFile(e.dataTransfer.files[0]));
+
+// ---------- Search ----------
+$("#searchForm").addEventListener("submit", (e) => { e.preventDefault(); runSearch(); });
+document.querySelectorAll("[data-q]").forEach((chip) =>
+  chip.addEventListener("click", () => { $("#query").value = chip.dataset.q; runSearch(); }),
+);
+$("#forMe").addEventListener("click", () => runForMe());
+
+function filters() {
+  return { location: $("#location").value.trim(), remote: $("#remote").checked };
+}
+
+function runSearch() {
+  const query = $("#query").value.trim();
+  if (!query) return $("#query").focus();
+  // Typed and popular searches ignore the resume unless the user ticks the match checkbox.
+  const match = Boolean(resumeInfo) && $("#useResume").checked;
+  return loadResults(`/api/jobs?${new URLSearchParams({ query, ...filters(), match })}`);
+}
+
+function runForMe() {
+  return loadResults(`/api/recommendations?${new URLSearchParams(filters())}`);
+}
+
+async function loadResults(url) {
+  $("#searchBtn").disabled = $("#forMe").disabled = true;
+  openDetails.clear();
+  $("#results").innerHTML = `<div class="center"><div class="spinner"></div>${esc(t("searching"))}</div>`;
+  $("#results").scrollIntoView({ behavior: "smooth", block: "start" });
+  try {
+    lastResults = await api(url);
+    renderResults(lastResults);
+  } catch (err) {
+    lastResults = null;
+    $("#results").innerHTML = `<div class="center">⚠️ ${esc(errMsg(err))}</div>`;
+  } finally {
+    $("#searchBtn").disabled = $("#forMe").disabled = false;
+  }
+}
+
+function postedText(iso) {
+  const days = Math.floor((Date.now() - new Date(iso)) / 86400000);
+  return days <= 0 ? t("today") : t("daysAgo", { n: days });
+}
+
+function jobCard(job, savedIds) {
+  const m = job.match;
+  const lv = m ? level(m.score) : null;
+  const isSaved = savedIds.has(job.id);
+  const ring = m ? `<div><div class="ring lvl-${lv}" style="--p:${m.score}"><div>${m.score}%</div></div></div>` : "";
+  const skills = m
+    ? `<div class="skills">
+         <div class="chips"><span class="label">${esc(t("have"))}</span>${
+           m.matchedSkills.map((s) => `<span class="sk have">✓ ${esc(s)}</span>`).join("") || "<span class='muted'>-</span>"}</div>
+         <div class="chips"><span class="label">${esc(t("need"))}</span>${
+           m.missingSkills.map((s) => `<span class="sk need">${esc(s)}</span>`).join("") || `<span class="muted">${esc(t("nothingMissing"))}</span>`}</div>
+       </div>`
+    : `<p class="muted" style="margin:0 0 14px;font-size:14px">${esc(job.preview)}…</p>`;
+  const desc = openDetails.get(job.id);
+  return `
+    <article class="card job" data-id="${esc(job.id)}">
+      ${ring}
+      <div class="job-main">
+        ${m ? `<span class="badge lvl-${lv}">${esc(t(lv))}</span>` : ""}
+        <h3>${esc(job.title)}</h3>
+        <div class="meta">${esc(job.company)} · ${esc(job.location)}</div>
+        <div class="facts">
+          <span>💰 ${esc(job.salary === "Not disclosed" ? t("salaryNA") : job.salary)}</span>
+          ${job.remote ? `<span>🏠 ${esc(t("remote"))}</span>` : ""}
+          <span>🕒 ${esc(postedText(job.postedAt))}</span>
+        </div>
+        ${skills}
+        <div class="row" style="margin-top:0">
+          <a class="btn btn-primary btn-sm" href="${esc(safeUrl(job.url))}" target="_blank" rel="noopener noreferrer">${esc(t("apply"))} ↗</a>
+          <button class="btn btn-sm" data-act="save" ${isSaved ? "disabled" : ""}>${isSaved ? "✓ " + esc(t("saved")) : "⭐ " + esc(t("save"))}</button>
+          <button class="btn btn-sm" data-act="details">${esc(desc !== undefined ? t("hide") : t("details"))}</button>
+        </div>
+        ${desc !== undefined ? `<div class="desc">${esc(desc)}</div>` : ""}
+      </div>
+    </article>`;
+}
+
+function renderResults(data) {
+  const savedIds = new Set(apps.applications.map((a) => a.jobId).filter(Boolean));
+  if (!data.jobs.length) {
+    $("#results").innerHTML = `<div class="center">🔎 ${esc(t("noResults"))}</div>`;
+    return;
+  }
+  $("#results").innerHTML = `
+    <div class="summary">
+      <div>
+        <h2>${esc(t("found", { n: data.jobs.length }))}</h2>
+        ${data.skillsUsed ? `<div class="muted" style="font-size:14px">✨ ${esc(t("forSkills", { s: data.skillsUsed.join(", ") }))}</div>` : ""}
+      </div>
+      ${data.scored ? `<span class="muted" style="font-size:14px">⬇ ${esc(t("sorted"))}</span>` : ""}
+    </div>
+    ${data.scored ? "" : `<div class="notice">💡 ${esc(t(resumeInfo ? "matchHint" : "noResume"))}</div>`}
+    ${data.jobs.map((j) => jobCard(j, savedIds)).join("")}`;
+}
+
+$("#results").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-act]");
+  if (!btn) return;
+  const id = btn.closest("[data-id]").dataset.id;
+  try {
+    if (btn.dataset.act === "save") {
+      const r = await api("/api/applications", { method: "POST", body: JSON.stringify({ job_id: id }) });
+      JP.toast(t(r.duplicate ? "tDup" : "tSaved"));
+      await loadApps();
+      renderResults(lastResults);
+    } else if (btn.dataset.act === "details") {
+      if (openDetails.has(id)) openDetails.delete(id);
+      else openDetails.set(id, (await api(`/api/jobs/${encodeURIComponent(id)}`)).description);
+      renderResults(lastResults);
+    }
+  } catch (err) { JP.toast(errMsg(err)); }
+});
+
+// ---------- Applications ----------
+async function loadApps() {
+  try {
+    apps = await api("/api/applications");
+    renderApps();
+  } catch (err) { JP.toast(errMsg(err)); }
+}
+
+function renderApps() {
+  $("#appCount").textContent = apps.applications.length;
+  const s = apps.stats;
+  if (s) {
+    $("#stats").innerHTML = [
+      [s.total, t("total")],
+      [s.total - s.byStatus.saved, t("applied")],
+      [s.byStatus.interview, t("interviews")],
+      [s.byStatus.offer, t("offers")],
+      [s.responseRate === "n/a" ? "-" : s.responseRate, t("rate")],
+    ].map(([v, l]) => `<div class="stat"><b class="grad-text">${esc(v)}</b><span>${esc(l)}</span></div>`).join("");
+  }
+  if (!apps.applications.length) {
+    $("#appList").innerHTML = `<div class="card center">📭 ${esc(t("noApps"))}</div>`;
+    return;
+  }
+  const locale = JP.lang === "en" ? "en-IN" : "hi-IN";
+  $("#appList").innerHTML = apps.applications.map((a) => `
+    <div class="card app" data-app="${esc(a.id)}">
+      <div class="job-main">
+        <h3>${esc(a.title)}</h3>
+        <div class="meta">${esc(a.company)} · ${esc(t("addedOn", { d: new Date(a.createdAt).toLocaleDateString(locale) }))}</div>
+      </div>
+      <select class="input" aria-label="Status">${STATUSES.map((st) =>
+        `<option value="${st}" ${st === a.status ? "selected" : ""}>${esc(t("st_" + st))}</option>`).join("")}</select>
+      ${a.url ? `<a class="btn btn-sm" href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener noreferrer">${esc(t("view"))} ↗</a>` : ""}
+      <button class="btn btn-sm" data-act="remove">🗑 ${esc(t("remove"))}</button>
+    </div>`).join("");
+}
+
+$("#appList").addEventListener("change", async (e) => {
+  if (e.target.tagName !== "SELECT") return;
+  const id = e.target.closest("[data-app]").dataset.app;
+  try {
+    await api(`/api/applications/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify({ status: e.target.value }) });
+    JP.toast(t("tStatus"));
+    loadApps();
+  } catch (err) { JP.toast(errMsg(err)); }
+});
+$("#appList").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-act=remove]");
+  if (!btn) return;
+  const id = btn.closest("[data-app]").dataset.app;
+  try {
+    await api(`/api/applications/${encodeURIComponent(id)}`, { method: "DELETE" });
+    JP.toast(t("tRemoved"));
+    await loadApps();
+    if (lastResults) renderResults(lastResults);
+  } catch (err) { JP.toast(errMsg(err)); }
+});
+
+// ---------- Start ----------
+(async function init() {
+  JP.initI18n(T, rerender);
+  try {
+    me = (await api("/api/auth/me")).user;
+    renderUser();
+  } catch { return; }
+  try {
+    const info = await api("/api/resume");
+    if (info.resume) {
+      resumeInfo = info;
+      $("#resume").value = info.resume;
+      showResumeSaved(true);
+    }
+  } catch {}
+  loadApps();
+})();
+</script>
+</body>
+</html>

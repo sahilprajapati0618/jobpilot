@@ -1,0 +1,554 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JobPilot</title>
+<meta name="description" content="Upload your resume and get jobs ranked by how well they match your skills. English, हिंदी and Hinglish.">
+<script>(function(){var t;try{t=localStorage.getItem("jobpilot-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+  /* Nav */
+  .nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+         background: color-mix(in srgb, var(--bg) 70%, transparent); border-bottom: 1px solid var(--border); }
+  .nav-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; flex-wrap: wrap; }
+  .nav-row .spacer { flex: 1; }
+  .nav-actions { display: flex; align-items: center; gap: 8px; }
+
+  /* Hero */
+  .hero { position: relative; min-height: calc(100vh - 66px); min-height: calc(100svh - 66px); display: flex; align-items: center; overflow: hidden; }
+  #scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .hero-fallback { position: absolute; inset: 0; display: none; }
+  .no-webgl #scene { display: none; }
+  .no-webgl .hero-fallback { display: block; background:
+      radial-gradient(circle at 72% 45%, rgba(139,108,255,.45), transparent 40%),
+      radial-gradient(circle at 80% 60%, rgba(34,211,238,.3), transparent 35%); }
+  .hero-copy { position: relative; z-index: 2; max-width: 600px; padding: 56px 0; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; font-size: 14px; font-weight: 600;
+           background: var(--grad-soft); border: 1px solid var(--border-strong); margin-bottom: 20px; }
+  h1 { font-size: clamp(36px, 6vw, 66px); line-height: 1.06; letter-spacing: -1.5px; margin: 0 0 18px; font-weight: 800; }
+  .lead { font-size: clamp(16px, 2vw, 19px); color: var(--muted); margin: 0 0 30px; max-width: 520px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .stats { display: flex; gap: 28px; margin-top: 38px; flex-wrap: wrap; }
+  .stats b { display: block; font-size: 26px; font-weight: 800; }
+  .stats span { color: var(--muted); font-size: 14px; }
+  .scroll-hint { position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 2; color: var(--muted); font-size: 22px; animation: bob 2s ease-in-out infinite; }
+  @keyframes bob { 50% { transform: translate(-50%, 8px); } }
+
+  /* Sections */
+  section.block { padding: 90px 0; position: relative; }
+  .eyebrow { color: var(--primary-2); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; font-size: 13px; text-align: center; }
+  h2 { font-size: clamp(28px, 4vw, 44px); line-height: 1.15; letter-spacing: -1px; text-align: center; margin: 8px auto 14px; max-width: 760px; }
+  .section-lead { text-align: center; color: var(--muted); max-width: 620px; margin: 0 auto 48px; font-size: 17px; }
+
+  /* 3D tilt cards */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; perspective: 1200px; }
+  .tilt { transform-style: preserve-3d; transition: transform .25s ease, box-shadow .25s;
+          transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
+  .tilt:hover { box-shadow: var(--glow); }
+  .tilt .pop { transform: translateZ(40px); }
+  .step-num { width: 48px; height: 48px; border-radius: 14px; background: var(--grad); color: #fff; display: grid; place-items: center;
+              font-weight: 800; font-size: 20px; margin-bottom: 18px; box-shadow: var(--glow); }
+  .feature-icon { font-size: 34px; margin-bottom: 14px; display: inline-block; }
+  .card h3 { margin: 0 0 8px; font-size: 19px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  /* Scroll reveal: cards flip up in 3D */
+  .reveal { opacity: 0; transform: perspective(900px) rotateX(18deg) translateY(40px); transition: opacity .7s ease, transform .7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+  .reveal.tilt.in { transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); }
+
+  /* Preview */
+  .preview { display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; }
+  .preview h2, .preview .eyebrow, .preview .section-lead { text-align: left; margin-left: 0; }
+  .ticks { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .ticks li { display: flex; gap: 10px; align-items: flex-start; }
+  .ticks li::before { content: "✓"; flex: none; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 800;
+                      background: var(--green-soft); color: var(--green); margin-top: 1px; }
+  .stage { perspective: 1400px; display: grid; place-items: center; padding: 20px 0; }
+  .mock { width: min(100%, 430px); transform: rotateY(-16deg) rotateX(8deg); transform-style: preserve-3d; animation: float 6s ease-in-out infinite; }
+  @keyframes float { 50% { transform: rotateY(-10deg) rotateX(4deg) translateY(-12px); } }
+  .mock-head { display: flex; gap: 16px; align-items: center; transform: translateZ(30px); }
+  .ring { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; flex: none;
+          background: conic-gradient(var(--green) 92%, var(--green-soft) 0); }
+  .ring > div { width: 66px; height: 66px; border-radius: 50%; background: var(--surface-solid); display: grid; place-items: center; font-weight: 800; font-size: 20px; color: var(--green); }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--green-soft); color: var(--green); }
+  .sk { border-radius: 7px; padding: 2px 9px; font-size: 13px; font-weight: 600; }
+  .sk.have { background: var(--green-soft); color: var(--green); }
+  .sk.need { background: var(--amber-soft); color: var(--amber); }
+  .mock .chips { margin-top: 10px; transform: translateZ(20px); }
+  .mock-float { position: absolute; padding: 10px 14px; border-radius: 14px; font-size: 14px; font-weight: 700; white-space: nowrap; }
+  .mf-1 { top: -18px; right: -14px; transform: translateZ(70px); }
+  .mf-2 { bottom: -20px; left: -18px; transform: translateZ(90px); }
+
+  /* CTA */
+  .cta { text-align: center; padding: 56px 24px; background: var(--grad-soft); border: 1px solid var(--border-strong); }
+  .cta h2 { margin-top: 0; }
+
+  footer { border-top: 1px solid var(--border); padding: 30px 0 40px; color: var(--muted); font-size: 14px; }
+  .foot { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  @media (max-width: 900px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .preview { grid-template-columns: 1fr; gap: 30px; }
+    .preview h2, .preview .eyebrow, .preview .section-lead { text-align: center; margin-left: auto; }
+  }
+  @media (max-width: 720px) {
+    .nav-lang { order: 3; width: 100%; display: flex; justify-content: center; }
+    .hero { min-height: auto; }
+    .hero-copy { text-align: center; margin: 0 auto; padding: 300px 0 60px; }
+    .lead { margin-left: auto; margin-right: auto; }
+    .cta-row, .stats { justify-content: center; }
+    .scroll-hint { display: none; }
+    section.block { padding: 64px 0; }
+  }
+  @media (max-width: 560px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .cta-row .btn { width: 100%; }
+    .stats { gap: 18px; }
+    .stats b { font-size: 22px; }
+    .nav-actions .btn-ghost { display: none; }
+    .mf-1 { right: 0; } .mf-2 { left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<nav class="nav">
+  <div class="nav-row wrap">
+    <a class="brand" href="/"><span class="logo">✈</span>JobPilot</a>
+    <span class="spacer"></span>
+    <div class="nav-lang">
+      <div class="seg" role="group" aria-label="Language">
+        <button data-lang="en">English</button><button data-lang="hi">हिंदी</button><button data-lang="hinglish">Hinglish</button>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" data-theme-toggle data-ta="toggleTheme"></button>
+      <span id="guestNav">
+        <a class="btn btn-ghost btn-sm" href="/login" data-t="login"></a>
+        <a class="btn btn-primary btn-sm" href="/signup" data-t="signup"></a>
+      </span>
+      <a class="btn btn-primary btn-sm" href="/app" id="userNav" hidden data-t="openApp"></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="hero-fallback"></div>
+  <div class="wrap">
+    <div class="hero-copy">
+      <div class="badge">✨ <span data-t="badge"></span></div>
+      <h1 data-th="title"></h1>
+      <p class="lead" data-t="lead"></p>
+      <div class="cta-row">
+        <a class="btn btn-primary btn-lg" href="/signup" id="ctaMain">🚀 <span data-t="ctaMain"></span></a>
+        <a class="btn btn-lg" href="/login" id="ctaSecond" data-t="ctaSecond"></a>
+      </div>
+      <div class="stats">
+        <div><b class="grad-text">3</b><span data-t="statBoards"></span></div>
+        <div><b class="grad-text">80+</b><span data-t="statSkills"></span></div>
+        <div><b class="grad-text">3</b><span data-t="statLangs"></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint" aria-hidden="true">⌄</div>
+</header>
+
+<section class="block" id="how">
+  <div class="wrap">
+    <div class="eyebrow" data-t="howEyebrow"></div>
+    <h2 data-t="howTitle"></h2>
+    <p class="section-lead" data-t="howLead"></p>
+    <div class="grid-3">
+      <div class="card tilt reveal" data-tilt><div class="pop"><div class="step-num">1</div><h3 data-t="s1t"></h3><p data-t="s1d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><div class="step-num">2</div><h3 data-t="s2t"></h3><p data-t="s2d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><div class="step-num">3</div><h3 data-t="s3t"></h3><p data-t="s3d"></p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap preview">
+    <div>
+      <div class="eyebrow" data-t="pvEyebrow"></div>
+      <h2 data-t="pvTitle"></h2>
+      <p class="section-lead" data-t="pvLead"></p>
+      <ul class="ticks">
+        <li data-t="pv1"></li><li data-t="pv2"></li><li data-t="pv3"></li>
+      </ul>
+    </div>
+    <div class="stage">
+      <div class="card mock" style="position:relative">
+        <div class="mock-head">
+          <div class="ring"><div>92%</div></div>
+          <div>
+            <span class="tag" data-t="strong"></span>
+            <h3 style="margin:6px 0 2px">Senior React Developer</h3>
+            <div class="muted" style="font-size:14px">Remote · Worldwide</div>
+          </div>
+        </div>
+        <div class="chips"><b style="font-size:13px" data-t="have"></b><span class="sk have">✓ react</span><span class="sk have">✓ typescript</span><span class="sk have">✓ node.js</span></div>
+        <div class="chips"><b style="font-size:13px" data-t="need"></b><span class="sk need">graphql</span></div>
+        <div class="card mock-float mf-1">🎯 <span data-t="mf1"></span></div>
+        <div class="card mock-float mf-2">⚡ <span data-t="mf2"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block" id="features">
+  <div class="wrap">
+    <div class="eyebrow" data-t="ftEyebrow"></div>
+    <h2 data-t="ftTitle"></h2>
+    <p class="section-lead" data-t="ftLead"></p>
+    <div class="grid-3">
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">📄</span><h3 data-t="f1t"></h3><p data-t="f1d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">🧠</span><h3 data-t="f2t"></h3><p data-t="f2d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">🎯</span><h3 data-t="f3t"></h3><p data-t="f3d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">🌍</span><h3 data-t="f4t"></h3><p data-t="f4d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">📊</span><h3 data-t="f5t"></h3><p data-t="f5d"></p></div></div>
+      <div class="card tilt reveal" data-tilt><div class="pop"><span class="feature-icon">🗣️</span><h3 data-t="f6t"></h3><p data-t="f6d"></p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap">
+    <div class="card cta reveal">
+      <h2 data-t="ctaTitle"></h2>
+      <p class="section-lead" style="margin-bottom:26px" data-t="ctaLead"></p>
+      <a class="btn btn-primary btn-lg" href="/signup" id="ctaBottom">🚀 <span data-t="ctaMain"></span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="/"><span class="logo">✈</span>JobPilot</a>
+    <span>
+      <span data-t="credits"></span>
+      <a href="https://remotive.com" target="_blank" rel="noopener">Remotive</a>,
+      <a href="https://jobicy.com" target="_blank" rel="noopener">Jobicy</a>,
+      <a href="https://www.arbeitnow.com" target="_blank" rel="noopener">Arbeitnow</a>
+    </span>
+    <span>© 2026 JobPilot</span>
+  </div>
+</footer>
+
+<script src="/assets/common.js"></script>
+<script>
+const T = {
+  en: {
+    login: "Log in", signup: "Sign up", openApp: "Open app", toggleTheme: "Switch theme",
+    badge: "Free · Smart matching · 3 languages",
+    title: 'Find jobs that <span class="grad-text">actually fit you.</span>',
+    lead: "Upload your resume once. JobPilot reads your skills, searches 3 job boards, and ranks every job by how well it matches you.",
+    ctaMain: "Get started free", ctaSecond: "I already have an account", ctaApp: "Open JobPilot",
+    statBoards: "job boards", statSkills: "skills detected", statLangs: "languages",
+    howEyebrow: "How it works", howTitle: "From resume to the right job in 3 steps",
+    howLead: "No long forms. No endless scrolling. Just upload and see your best matches.",
+    s1t: "Upload your resume", s1d: "Drop in a PDF, Word or TXT file. It stays private to your account.",
+    s2t: "We read your skills", s2d: "JobPilot detects 80+ technologies and picks your strongest ones automatically.",
+    s3t: "Get ranked jobs", s3d: "Every job gets a match score, plus the skills you have and the ones to learn.",
+    pvEyebrow: "Match score", pvTitle: "See exactly why a job fits you",
+    pvLead: "No guessing. Every job card shows a clear score and a skill-by-skill breakdown.",
+    pv1: "Your matching skills, highlighted in green", pv2: "Missing skills to learn, so you can upskill smartly",
+    pv3: "Key requirements from the job title count double",
+    strong: "Strong match", have: "You have:", need: "To learn:", mf1: "92% match", mf2: "Found in 3 seconds",
+    ftEyebrow: "Features", ftTitle: "Everything you need for your job hunt",
+    ftLead: "Built for freshers, job switchers and remote job seekers.",
+    f1t: "Resume upload", f1d: "PDF, Word (.docx) or TXT, with drag and drop on desktop and mobile.",
+    f2t: "Skill detection", f2d: "Understands aliases like NodeJS, k8s and Postgres, and ignores look-alike words.",
+    f3t: "Smart match score", f3d: "Skill overlap plus text similarity, with protection against inflated scores.",
+    f4t: "3 job boards", f4d: "Remotive, Jobicy and Arbeitnow searched together, with duplicates removed.",
+    f5t: "Application tracker", f5d: "Save jobs and move them from Applied to Interview to Offer, with stats.",
+    f6t: "3 languages", f6d: "Use the whole app in English, हिंदी or Hinglish. Switch any time.",
+    ctaTitle: "Your next job is waiting", ctaLead: "Create a free account in 30 seconds, or continue with Google.",
+    credits: "Job listings from",
+  },
+  hi: {
+    login: "लॉग इन", signup: "साइन अप", openApp: "ऐप खोलें", toggleTheme: "थीम बदलें",
+    badge: "मुफ़्त · स्मार्ट मैचिंग · 3 भाषाएँ",
+    title: 'ऐसी नौकरी खोजें जो <span class="grad-text">सच में आपके लिए हो।</span>',
+    lead: "बस एक बार अपना रिज़्यूमे अपलोड करें। JobPilot आपकी स्किल्स पढ़ता है, 3 जॉब साइट्स पर खोजता है, और हर नौकरी को आपके मैच के हिसाब से रैंक करता है।",
+    ctaMain: "मुफ़्त शुरू करें", ctaSecond: "मेरा अकाउंट पहले से है", ctaApp: "JobPilot खोलें",
+    statBoards: "जॉब साइट्स", statSkills: "स्किल्स की पहचान", statLangs: "भाषाएँ",
+    howEyebrow: "कैसे काम करता है", howTitle: "रिज़्यूमे से सही नौकरी तक, सिर्फ़ 3 स्टेप में",
+    howLead: "न लंबे फ़ॉर्म, न घंटों स्क्रॉल। बस अपलोड करें और अपने सबसे अच्छे मैच देखें।",
+    s1t: "रिज़्यूमे अपलोड करें", s1d: "PDF, Word या TXT फ़ाइल डालें। यह सिर्फ़ आपके अकाउंट में रहता है।",
+    s2t: "हम आपकी स्किल्स पढ़ते हैं", s2d: "JobPilot 80+ टेक्नोलॉजी पहचानता है और आपकी सबसे मज़बूत स्किल्स खुद चुनता है।",
+    s3t: "रैंक की हुई नौकरियाँ पाएँ", s3d: "हर नौकरी का मैच स्कोर, साथ में आपकी स्किल्स और सीखने लायक स्किल्स।",
+    pvEyebrow: "मैच स्कोर", pvTitle: "साफ़ देखें कि नौकरी आपके लिए क्यों सही है",
+    pvLead: "कोई अंदाज़ा नहीं। हर जॉब कार्ड पर साफ़ स्कोर और हर स्किल का हिसाब।",
+    pv1: "आपकी मिलती स्किल्स हरे रंग में", pv2: "कम स्किल्स दिखती हैं, ताकि आप सही चीज़ सीखें",
+    pv3: "जॉब टाइटल की ज़रूरी स्किल्स को दोगुना महत्व",
+    strong: "बहुत अच्छा मैच", have: "आपके पास है:", need: "सीखना होगा:", mf1: "92% मैच", mf2: "3 सेकंड में मिला",
+    ftEyebrow: "फ़ीचर्स", ftTitle: "नौकरी की तलाश के लिए सब कुछ एक जगह",
+    ftLead: "फ़्रेशर्स, नौकरी बदलने वालों और रिमोट नौकरी चाहने वालों के लिए।",
+    f1t: "रिज़्यूमे अपलोड", f1d: "PDF, Word (.docx) या TXT, कंप्यूटर और मोबाइल दोनों पर ड्रैग एंड ड्रॉप।",
+    f2t: "स्किल पहचान", f2d: "NodeJS, k8s, Postgres जैसे नाम समझता है, और मिलते-जुलते शब्दों से नहीं भटकता।",
+    f3t: "स्मार्ट मैच स्कोर", f3d: "स्किल्स और टेक्स्ट दोनों की तुलना, और गलत ऊँचे स्कोर से बचाव।",
+    f4t: "3 जॉब साइट्स", f4d: "Remotive, Jobicy और Arbeitnow एक साथ, डुप्लिकेट हटाकर।",
+    f5t: "आवेदन ट्रैकर", f5d: "नौकरियाँ सेव करें और आवेदन से इंटरव्यू और ऑफ़र तक ट्रैक करें।",
+    f6t: "3 भाषाएँ", f6d: "पूरा ऐप English, हिंदी या Hinglish में चलाएँ। कभी भी बदलें।",
+    ctaTitle: "आपकी अगली नौकरी इंतज़ार कर रही है", ctaLead: "30 सेकंड में मुफ़्त अकाउंट बनाएँ, या Google से जारी रखें।",
+    credits: "नौकरियाँ यहाँ से:",
+  },
+  hinglish: {
+    login: "Log in", signup: "Sign up", openApp: "App kholo", toggleTheme: "Theme badlo",
+    badge: "Free · Smart matching · 3 languages",
+    title: 'Aisi job dhoondo jo <span class="grad-text">sach me aapke liye ho.</span>',
+    lead: "Bas ek baar resume upload karo. JobPilot aapki skills padhta hai, 3 job sites pe dhoondhta hai, aur har job ko aapke match ke hisaab se rank karta hai.",
+    ctaMain: "Free me shuru karo", ctaSecond: "Mera account pehle se hai", ctaApp: "JobPilot kholo",
+    statBoards: "job sites", statSkills: "skills detect", statLangs: "languages",
+    howEyebrow: "Kaise kaam karta hai", howTitle: "Resume se sahi job tak, sirf 3 steps me",
+    howLead: "Na lambe forms, na ghanton scrolling. Bas upload karo aur best matches dekho.",
+    s1t: "Resume upload karo", s1d: "PDF, Word ya TXT file daalo. Ye sirf aapke account me rehta hai.",
+    s2t: "Hum aapki skills padhte hain", s2d: "JobPilot 80+ technologies pehchanta hai aur aapki strongest skills khud chunta hai.",
+    s3t: "Ranked jobs pao", s3d: "Har job ka match score, saath me aapki skills aur seekhne wali skills.",
+    pvEyebrow: "Match score", pvTitle: "Saaf dekho ki job aapke liye kyun sahi hai",
+    pvLead: "Koi guesswork nahi. Har job card pe clear score aur har skill ka hisaab.",
+    pv1: "Aapki matching skills hare rang me", pv2: "Missing skills dikhti hain, taaki sahi cheez seekho",
+    pv3: "Job title ki key skills ko double weight",
+    strong: "Zabardast match", have: "Aapke paas hai:", need: "Seekhna padega:", mf1: "92% match", mf2: "3 second me mila",
+    ftEyebrow: "Features", ftTitle: "Job hunt ke liye sab kuch ek jagah",
+    ftLead: "Freshers, job switchers aur remote job dhoondhne walon ke liye.",
+    f1t: "Resume upload", f1d: "PDF, Word (.docx) ya TXT, computer aur mobile dono pe drag and drop.",
+    f2t: "Skill detection", f2d: "NodeJS, k8s, Postgres jaise naam samajhta hai, aur milte-julte words se confuse nahi hota.",
+    f3t: "Smart match score", f3d: "Skills aur text dono compare, aur galat high score se bachav.",
+    f4t: "3 job sites", f4d: "Remotive, Jobicy aur Arbeitnow ek saath, duplicates hata ke.",
+    f5t: "Application tracker", f5d: "Jobs save karo aur Apply se Interview aur Offer tak track karo.",
+    f6t: "3 languages", f6d: "Pura app English, हिंदी ya Hinglish me chalao. Kabhi bhi badlo.",
+    ctaTitle: "Aapki agli job wait kar rahi hai", ctaLead: "30 second me free account banao, ya Google se continue karo.",
+    credits: "Jobs yahan se:",
+  },
+};
+JP.initI18n(T);
+
+// Signed-in visitors get "Open app" instead of Log in / Sign up.
+JP.api("/api/auth/me").then(() => {
+  document.getElementById("guestNav").hidden = true;
+  document.getElementById("userNav").hidden = false;
+  for (const id of ["ctaMain", "ctaBottom"]) document.getElementById(id).href = "/app";
+  const second = document.getElementById("ctaSecond");
+  second.href = "/app";
+  second.dataset.t = "ctaApp";
+  JP.applyI18n();
+}).catch(() => {});
+
+// ---------- 3D tilt on hover (mouse devices only) ----------
+if (matchMedia("(hover: hover)").matches) {
+  document.querySelectorAll("[data-tilt]").forEach((el) => {
+    el.addEventListener("pointermove", (e) => {
+      const r = el.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.setProperty("--ry", `${x * 14}deg`);
+      el.style.setProperty("--rx", `${-y * 14}deg`);
+    });
+    el.addEventListener("pointerleave", () => { el.style.setProperty("--rx", "0deg"); el.style.setProperty("--ry", "0deg"); });
+  });
+}
+
+// ---------- Scroll reveal ----------
+const io = new IntersectionObserver((entries) => entries.forEach((e) => {
+  if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+}), { threshold: 0.15 });
+document.querySelectorAll(".reveal").forEach((el, i) => { el.style.transitionDelay = `${(i % 3) * 90}ms`; io.observe(el); });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---------- 3D hero: a wireframe globe with job cards orbiting it ----------
+(function () {
+  const canvas = document.getElementById("scene");
+  const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fail = () => document.documentElement.classList.add("no-webgl");
+  if (!window.THREE) return fail();
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  } catch { return fail(); }
+
+  const isMobile = () => innerWidth < 720;
+  renderer.setPixelRatio(Math.min(devicePixelRatio, isMobile() ? 1.5 : 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+  camera.position.set(0, 0, 9);
+
+  const world = new THREE.Group(); // shifted right on desktop, centered above the text on mobile
+  scene.add(world);
+
+  const COLORS = { violet: 0x8b6cff, blue: 0x5b8cff, cyan: 0x22d3ee };
+
+  // Globe: wireframe shell, glowing vertices, dark core
+  const globe = new THREE.Group();
+  const shellGeo = new THREE.IcosahedronGeometry(1.7, 3);
+  globe.add(new THREE.LineSegments(new THREE.WireframeGeometry(shellGeo),
+    new THREE.LineBasicMaterial({ color: COLORS.violet, transparent: true, opacity: 0.28 })));
+  globe.add(new THREE.Points(shellGeo,
+    new THREE.PointsMaterial({ color: COLORS.cyan, size: 0.045, transparent: true, opacity: 0.9 })));
+  const core = new THREE.Mesh(new THREE.SphereGeometry(1.62, 48, 48),
+    new THREE.MeshBasicMaterial({ color: 0x0d1022, transparent: true, opacity: 0.85 }));
+  globe.add(core);
+  world.add(globe);
+
+  // Orbit rings
+  const rings = [];
+  [[2.5, 0.35, COLORS.blue], [3.1, -0.5, COLORS.violet]].forEach(([r, tilt, color]) => {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(r, 0.008, 8, 160),
+      new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.45 }));
+    ring.rotation.x = Math.PI / 2 + tilt;
+    world.add(ring);
+    rings.push(ring);
+  });
+
+  // Floating job cards (canvas textures, redrawn when the theme changes)
+  const JOBS = [
+    ["React Developer", "Remote · Worldwide", 92],
+    ["DevOps Engineer", "Remote · Europe", 90],
+    ["Python Engineer", "Berlin · Hybrid", 87],
+    ["Node.js Developer", "Remote · Worldwide", 84],
+    ["Data Analyst", "Remote · India", 78],
+    ["Android Developer", "Remote · APAC", 73],
+  ];
+
+  function drawCard(ctx, [title, place, score], light) {
+    const W = 512, H = 300;
+    ctx.clearRect(0, 0, W, H);
+    const r = 36;
+    ctx.beginPath();
+    ctx.moveTo(r, 4); ctx.arcTo(W - 4, 4, W - 4, H - 4, r); ctx.arcTo(W - 4, H - 4, 4, H - 4, r);
+    ctx.arcTo(4, H - 4, 4, 4, r); ctx.arcTo(4, 4, W - 4, 4, r); ctx.closePath();
+    ctx.fillStyle = light ? "rgba(255,255,255,0.94)" : "rgba(21,25,53,0.92)";
+    ctx.fill();
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, "#8b6cff"); grad.addColorStop(1, "#22d3ee");
+    ctx.strokeStyle = grad; ctx.lineWidth = 5; ctx.stroke();
+
+    const color = score >= 85 ? "#4ade80" : score >= 75 ? "#7aa2ff" : "#fbbf24";
+    ctx.lineWidth = 16; ctx.lineCap = "round";
+    ctx.strokeStyle = light ? "rgba(20,24,60,0.08)" : "rgba(255,255,255,0.1)";
+    ctx.beginPath(); ctx.arc(110, 150, 62, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = color;
+    ctx.beginPath(); ctx.arc(110, 150, 62, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * score) / 100); ctx.stroke();
+    ctx.fillStyle = color; ctx.font = "800 42px 'Plus Jakarta Sans', sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(score + "%", 110, 152);
+
+    ctx.textAlign = "left";
+    ctx.fillStyle = light ? "#12153a" : "#eef0ff";
+    ctx.font = "700 36px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillText(title.length > 17 ? title.slice(0, 16) + "…" : title, 200, 122);
+    ctx.fillStyle = light ? "#5c6390" : "#9ba3cc";
+    ctx.font = "500 26px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillText(place, 200, 170);
+    ctx.fillStyle = color; ctx.globalAlpha = 0.18;
+    ctx.fillRect(200, 200, 150, 40); ctx.globalAlpha = 1;
+    ctx.fillStyle = color; ctx.font = "700 22px 'Plus Jakarta Sans', sans-serif";
+    ctx.fillText("✓ match", 214, 221);
+  }
+
+  const cards = JOBS.map((job, i) => {
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 300;
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 4;
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1.75, 1.025),
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    world.add(mesh);
+    return {
+      mesh, ctx: c.getContext("2d"), tex, job,
+      radius: 2.5 + (i % 3) * 0.35,
+      speed: 0.12 + (i % 2) * 0.05,
+      phase: (i / JOBS.length) * Math.PI * 2,
+      tilt: ((i % 3) - 1) * 0.45,
+      bob: Math.random() * Math.PI * 2,
+    };
+  });
+
+  function paintCards() {
+    const light = document.documentElement.dataset.theme === "light";
+    cards.forEach((c) => { drawCard(c.ctx, c.job, light); c.tex.needsUpdate = true; });
+    core.material.color.set(light ? 0xeef0fb : 0x0d1022);
+  }
+  paintCards();
+  // Repaint once web fonts load, and whenever the theme changes.
+  if (document.fonts) document.fonts.ready.then(paintCards);
+  new MutationObserver(paintCards).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  // Starfield
+  const starCount = isMobile() ? 260 : 650;
+  const pos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount; i++) {
+    const r = 6 + Math.random() * 14, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i * 3 + 2] = r * Math.cos(ph) - 6;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xaab4ff, size: 0.05, transparent: true, opacity: 0.7 }));
+  scene.add(stars);
+
+  // Layout: globe to the right of the text on desktop, above it on mobile
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    // Desktop: keep the whole orbit to the right of the headline so cards never cover the text.
+    if (isMobile()) { world.position.set(0, 2.15, 0); world.scale.setScalar(0.62); }
+    else if (w > 1100) { world.position.set(3.1, 0, 0); world.scale.setScalar(0.82); }
+    else { world.position.set(2.9, 0, 0); world.scale.setScalar(0.68); }
+  }
+  addEventListener("resize", resize);
+  resize();
+
+  // Pointer parallax
+  const target = { x: 0, y: 0 };
+  addEventListener("pointermove", (e) => {
+    target.x = (e.clientX / innerWidth - 0.5) * 0.5;
+    target.y = (e.clientY / innerHeight - 0.5) * 0.35;
+  });
+
+  let visible = true;
+  new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(canvas);
+
+  const clock = new THREE.Clock();
+  function frame() {
+    const t = clock.getElapsedTime();
+    globe.rotation.y = t * 0.12;
+    globe.rotation.x = Math.sin(t * 0.2) * 0.08;
+    rings[0].rotation.z = t * 0.05;
+    rings[1].rotation.z = -t * 0.04;
+    cards.forEach((c) => {
+      const a = c.phase + t * c.speed;
+      c.mesh.position.set(Math.cos(a) * c.radius * 0.85,Math.sin(a) * c.radius * Math.sin(c.tilt) * 0.6 + Math.sin(t + c.bob) * 0.12, Math.sin(a) * c.radius * 0.75);
+      c.mesh.quaternion.copy(camera.quaternion); // always face the viewer
+      const depth = (c.mesh.position.z + c.radius) / (2 * c.radius); // 0 = back, 1 = front
+      c.mesh.material.opacity = 0.35 + depth * 0.65;
+      c.mesh.renderOrder = Math.round(depth * 10);
+    });
+    stars.rotation.y = t * 0.01;
+    world.rotation.y += (target.x - world.rotation.y) * 0.04;
+    world.rotation.x += (target.y - world.rotation.x) * 0.04;
+    renderer.render(scene, camera);
+  }
+
+  function loop() {
+    if (visible && !document.hidden) frame();
+    requestAnimationFrame(loop);
+  }
+  if (reduceMotion) frame(); else loop();
+})();
+</script>
+</body>
+</html>
