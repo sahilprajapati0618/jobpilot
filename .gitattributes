@@ -1,3 +1,6 @@
 * text=auto eol=lf
 *.png binary
 *.pdf binary
+
+# The HTML pages are large but the core logic is TypeScript; keep GitHub's language bar representative.
+public/*.html linguist-detectable=false
