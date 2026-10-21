@@ -25,10 +25,11 @@ import {
 } from "./auth.js";
 import { googleConfig, googleAuthUrl, googleProfile } from "./google.js";
 
-const PORT = Number(process.env.PORT ?? 3000);
+// `||` rather than `??` so settings left blank in a hosting dashboard fall back to the defaults.
+const PORT = Number(process.env.PORT || 3000);
 // Local only by default; set HOST=0.0.0.0 when deploying.
-const HOST = process.env.HOST ?? "127.0.0.1";
-const PUBLIC_URL = (process.env.PUBLIC_URL ?? `http://localhost:${PORT}`).replace(/\/$/, "");
+const HOST = process.env.HOST || "127.0.0.1";
+const PUBLIC_URL = (process.env.PUBLIC_URL || `http://localhost:${PORT}`).replace(/\/$/, "");
 const SECURE_COOKIES = process.env.NODE_ENV === "production";
 const TRUST_PROXY = process.env.TRUST_PROXY === "1"; // behind Render/Railway etc., read the client IP from X-Forwarded-For
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "public");

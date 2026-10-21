@@ -29,7 +29,7 @@ export interface Stats {
 }
 
 export function dataDir(): string {
-  return process.env.JOBPILOT_DATA_DIR ?? path.join(os.homedir(), ".jobpilot");
+  return process.env.JOBPILOT_DATA_DIR || path.join(os.homedir(), ".jobpilot");
 }
 
 // ---------- File helpers (shared with auth.ts) ----------
